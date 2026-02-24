@@ -8,6 +8,8 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // Allow access from LAN IPs and ngrok tunnels (required for camera on external devices)
+    allowedHosts: "all",
     hmr: {
       overlay: false,
     },

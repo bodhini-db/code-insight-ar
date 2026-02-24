@@ -4,6 +4,7 @@ export interface CodeExplanation {
   purpose: string;
   details: string[];
   logicFlow: { step: number; code: string; explanation: string }[];
+  codeStructure: string[];
 }
 
 export const mockExplanations: Record<string, CodeExplanation> = {
@@ -24,6 +25,12 @@ export const mockExplanations: Record<string, CodeExplanation> = {
         explanation: "Adds number1 and number2, storing the sum in sum",
       },
     ],
+    codeStructure: [
+      "Variable declaration (int sum)",
+      "Assignment operator (=)",
+      "Arithmetic operator (+)",
+      "Statement terminator (;)",
+    ],
   },
   forLoop: {
     code: 'for (int i = 0; i < 10; i++) {\n  System.out.println(i);\n}',
@@ -42,6 +49,12 @@ export const mockExplanations: Record<string, CodeExplanation> = {
       { step: 3, code: "System.out.println(i)", explanation: "Print current counter value" },
       { step: 4, code: "i++", explanation: "Increment counter by 1, then repeat from step 2" },
     ],
+    codeStructure: [
+      "for (...) loop header",
+      "Initializer; condition; update",
+      "Loop body block ({ ... })",
+      "Function/method call inside the loop body",
+    ],
   },
   function: {
     code: 'public static void main(String[] args) {\n  System.out.println("Hello");\n}',
@@ -57,6 +70,12 @@ export const mockExplanations: Record<string, CodeExplanation> = {
     logicFlow: [
       { step: 1, code: "public static void main(String[] args)", explanation: "JVM calls this method to start the program" },
       { step: 2, code: 'System.out.println("Hello")', explanation: "Outputs the text 'Hello' followed by a new line" },
+    ],
+    codeStructure: [
+      "Method signature (public static void main(...))",
+      "Parameter list (String[] args)",
+      "Method body block ({ ... })",
+      "Output statement (System.out.println)",
     ],
   },
 };
