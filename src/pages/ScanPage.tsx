@@ -15,18 +15,23 @@ const ScanPage = () => {
   useEffect(() => {
     return () => {
       // Release OCR resources when leaving the page.
+      console.log("[Scan] Cleaning up OCR worker");
       void terminateOcrWorker();
     };
   }, []);
 
   const handleScan = useCallback(
     async (canvas: HTMLCanvasElement) => {
+      console.log("[Scan] Scan requested");
       setScanError(null);
 
       try {
+        console.log("[Scan] Starting OCR on captured frame");
         const { codeText } = await recognizeCodeFromCanvas(canvas);
+        console.log("[Scan] OCR raw code text:", codeText);
 
         if (!codeText) {
+          console.warn("[Scan] OCR returned empty / non-code text");
           setScanError("Code snippet detected, but unable to extract clearly. Try again.");
           setFlowState("cameraActive");
           setExplanationPoints([]);
@@ -34,6 +39,7 @@ const ScanPage = () => {
         }
 
         setFlowState("codeDetected");
+        console.log("[Scan] Generating explanation for detected code");
         const explanation = explainCode(codeText);
         setFlowState("explanationReady");
         const flowPoints =
@@ -41,7 +47,9 @@ const ScanPage = () => {
         const detailPoints = explanation.details ?? [];
         const pointsSource = flowPoints.length > 0 ? flowPoints : detailPoints;
         setExplanationPoints(pointsSource.slice(0, 4));
-      } catch {
+        console.log("[Scan] Explanation points ready:", pointsSource.slice(0, 4));
+      } catch (err) {
+        console.error("[Scan] OCR scan failed", err);
         setScanError("Scanning failed. Please try again.");
         setFlowState("cameraActive");
         setExplanationPoints([]);
