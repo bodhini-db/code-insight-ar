@@ -23,7 +23,9 @@ export default function CameraView({
   onCameraReady,
   onScanStart,
   onHelp,
-  explanationText = null,
+  isScanning = false,
+  scanResults = [],
+  onResultClick,
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -33,9 +35,10 @@ export default function CameraView({
 
   const statusText = useMemo(() => {
     if (scanError) return scanError;
-    if (scanning) return "Scanning code...";
+    if (scanning || isScanning) return "Scanning code...";
+    if (scanResults.length > 0) return "Tap a card to view details";
     return "Point your camera at the code";
-  }, [scanning, scanError]);
+  }, [scanning, scanError, isScanning, scanResults]);
 
   const stopCamera = useCallback(() => {
     const video = videoRef.current;
@@ -157,44 +160,57 @@ export default function CameraView({
               </div>
             </div>
           )}
+
+          {/* Results Overlay */}
+          {scanResults.length > 0 && (
+            <div className="absolute inset-0 z-10 overflow-y-auto bg-black/40 p-4 pb-32">
+              <div className="flex flex-col gap-3">
+                {scanResults.map((result, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => onResultClick?.(result)}
+                    className="flex w-full flex-col items-start gap-1 rounded-xl bg-[#0F52BA]/90 p-4 text-left text-white shadow-lg backdrop-blur-md transition-transform active:scale-95 border border-white/20"
+                  >
+                    <h3 className="text-sm font-bold leading-tight">{result.summary}</h3>
+                    <p className="line-clamp-2 text-xs text-white/80 opacity-90">
+                      • {result.code.substring(0, 60).replace(/\n/g, " ")}...
+                    </p>
+                    <span className="mt-2 text-[10px] font-medium text-white/60">
+                      Tap for more →
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Explanation below camera */}
-        {explanationText && (
-          <section className="px-5 py-4">
-            <div className="rounded-xl bg-card p-4 shadow-md">
-              <h2 className="mb-2 text-base font-bold text-foreground">Explanation</h2>
-              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-                {explanationText}
-              </p>
-            </div>
-          </section>
-        )}
-
         {/* Bottom Bar */}
-        <div className="safe-area-bottom relative z-20 bg-card px-6 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-          <p className="mb-3 text-center text-sm text-muted-foreground">{statusText}</p>
-          {scanning && (
-            <div className="mx-auto mb-3 h-1.5 w-48 overflow-hidden rounded-full bg-muted">
-              <div className="h-full animate-pulse rounded-full bg-primary" style={{ width: "60%" }} />
+        <div className="safe-area-bottom relative z-20 bg-[#00BFA5] px-6 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+          <p className="mb-3 text-center text-sm font-medium text-white drop-shadow-sm">
+            {statusText}
+          </p>
+          {(scanning || isScanning) && (
+            <div className="mx-auto mb-3 h-1.5 w-48 overflow-hidden rounded-full bg-white/30">
+              <div className="h-full animate-pulse rounded-full bg-white" style={{ width: "60%" }} />
             </div>
           )}
 
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-between px-8">
             <button
               type="button"
               onClick={() => onHelp?.()}
-              className="rounded-2xl border border-primary/40 px-5 py-2.5 text-sm font-semibold text-primary shadow-sm transition-all active:scale-95"
+              className="flex items-center gap-2 rounded-full bg-[#008F7A] px-6 py-3 text-sm font-bold text-white shadow-md transition-all active:scale-95"
             >
-              Help
+              <span className="text-lg">👋</span> Help
             </button>
             <button
               onClick={handleScanClick}
-              disabled={scanning || !cameraActive}
-              className="flex items-center gap-2 rounded-2xl bg-primary px-8 py-2.5 text-sm font-semibold text-primary-foreground shadow-md transition-all active:scale-95 disabled:opacity-60"
+              disabled={scanning || isScanning || !cameraActive}
+              className="flex items-center gap-2 rounded-full bg-[#004D40] px-8 py-3 text-sm font-bold text-white shadow-md transition-all active:scale-95 disabled:opacity-60"
             >
               <Camera className="h-5 w-5" />
-              {scanning ? "Scanning..." : "Scan"}
+              {scanning || isScanning ? "Scanning" : "Scan"}
             </button>
           </div>
         </div>

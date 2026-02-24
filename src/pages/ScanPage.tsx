@@ -10,6 +10,7 @@ const ScanPage = () => {
   const [scanError, setScanError] = useState<string | null>(null);
   const [flowState, setFlowState] = useState<ScanFlowState>("cameraActive");
   const [explanationText, setExplanationText] = useState<string | null>(null);
+  const [scanResults, setScanResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const canvasToBase64 = useCallback((canvas: HTMLCanvasElement): Promise<string> => {
@@ -44,29 +45,39 @@ const ScanPage = () => {
       console.log("[Scan] Scan requested (Gemini Vision)");
       setScanError(null);
       setExplanationText(null);
+      setScanResults([]);
       setIsLoading(true);
 
       try {
         console.log("[Scan] Converting captured frame to base64");
         const base64 = await canvasToBase64(canvas);
         console.log("[Scan] Calling Gemini Vision");
-        const explanation = await explainCodeFromImage(base64);
-        setFlowState("explanationReady");
-        setExplanationText(explanation);
-        console.log("[Scan] Explanation text ready");
+        const response = await explainCodeFromImage(base64);
+        console.log("[Scan] Response received", response);
+        
+        if (response.results && Array.isArray(response.results)) {
+          setScanResults(response.results);
+          setFlowState("explanationReady");
+        } else {
+          throw new Error("Invalid response format from AI");
+        }
       } catch (err) {
         console.error("[Scan] Gemini Vision scan failed", err);
         const message =
           err instanceof Error ? err.message : "Scanning failed. Please try again.";
         setScanError(message);
         setFlowState("cameraActive");
-        setExplanationText(null);
+        setScanResults([]);
       } finally {
         setIsLoading(false);
       }
     },
     [canvasToBase64],
   );
+
+  const handleCardClick = (result: any) => {
+    navigate("/explanation", { state: { explanation: result } });
+  };
 
   return (
     <CameraView
@@ -76,7 +87,9 @@ const ScanPage = () => {
       onCameraReady={() => setFlowState("cameraActive")}
       onScanStart={() => setFlowState("scanning")}
       onHelp={() => navigate("/")}
-      explanationText={isLoading ? "Scanning code with Gemini..." : explanationText}
+      isScanning={isLoading}
+      scanResults={scanResults}
+      onResultClick={handleCardClick}
     />
   );
 };
