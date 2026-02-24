@@ -10,10 +10,8 @@ let workerPromise = null;
 async function getWorker() {
   if (!workerPromise) {
     workerPromise = (async () => {
-      const worker = await createWorker();
-
-      await worker.loadLanguage("eng");
-      await worker.initialize("eng");
+      // Tesseract.js v5+ / v6: pass language directly to createWorker
+      const worker = await createWorker("eng");
       return worker;
     })();
   }

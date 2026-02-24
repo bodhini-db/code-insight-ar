@@ -8,13 +8,13 @@ import AppHeader from "@/components/AppHeader";
  * - Captures a frame to an offscreen canvas when user taps Scan.
  *
  * Props:
- * - onScan(canvas): async handler that runs OCR + navigation
+ * - onScan(canvas): async handler that runs capture + analysis
  * - scanError: string | null
  * - onClearError(): clears scanError
  * - onCameraReady(): called when camera becomes active
  * - onScanStart(): called when Scan begins
  * - onHelp(): invoked when Help button is pressed
- * - explanationPoints?: string[] - short bullet points to float over camera
+ * - explanationText?: string | null - explanation rendered below camera
  */
 export default function CameraView({
   onScan,
@@ -23,7 +23,7 @@ export default function CameraView({
   onCameraReady,
   onScanStart,
   onHelp,
-  explanationPoints = [],
+  explanationText = null,
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -108,7 +108,7 @@ export default function CameraView({
   }, [captureFrameToCanvas, onClearError, onScan, onScanStart]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-[100dvh] flex-col bg-background">
       <AppHeader title="Code Scan" showBack />
 
       <main className="relative flex flex-1 flex-col">
@@ -124,22 +124,6 @@ export default function CameraView({
 
           {/* Hidden canvas used for frame capture */}
           <canvas ref={canvasRef} className="hidden" />
-
-          {/* Floating explanation cards overlay */}
-          {explanationPoints.length > 0 && (
-            <div className="pointer-events-none absolute inset-0 flex justify-end">
-              <div className="pointer-events-auto mr-3 mt-16 mb-28 flex max-h-[70%] w-[65%] flex-col gap-3 overflow-y-auto">
-                {explanationPoints.map((text, index) => (
-                  <div
-                    key={`${index}-${text.slice(0, 20)}`}
-                    className="rounded-2xl bg-sky-500/75 px-4 py-3 text-sm text-white shadow-lg backdrop-blur-md"
-                  >
-                    {text}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Scan overlay */}
           {scanning && (
@@ -175,8 +159,20 @@ export default function CameraView({
           )}
         </div>
 
+        {/* Explanation below camera */}
+        {explanationText && (
+          <section className="px-5 py-4">
+            <div className="rounded-xl bg-card p-4 shadow-md">
+              <h2 className="mb-2 text-base font-bold text-foreground">Explanation</h2>
+              <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
+                {explanationText}
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* Bottom Bar */}
-        <div className="safe-area-bottom bg-card px-6 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+        <div className="safe-area-bottom relative z-20 bg-card px-6 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
           <p className="mb-3 text-center text-sm text-muted-foreground">{statusText}</p>
           {scanning && (
             <div className="mx-auto mb-3 h-1.5 w-48 overflow-hidden rounded-full bg-muted">

@@ -1,8 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import CameraView from "@/components/CameraView";
-import { recognizeCodeFromCanvas, terminateOcrWorker } from "@/services/ocrService";
-import { explainCode } from "@/lib/explainCode";
+import { explainCodeFromImage } from "@/services/geminiVision";
 
 type ScanFlowState = "cameraActive" | "scanning" | "codeDetected" | "explanationReady";
 
@@ -10,52 +9,63 @@ const ScanPage = () => {
   const navigate = useNavigate();
   const [scanError, setScanError] = useState<string | null>(null);
   const [flowState, setFlowState] = useState<ScanFlowState>("cameraActive");
-  const [explanationPoints, setExplanationPoints] = useState<string[]>([]);
+  const [explanationText, setExplanationText] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    return () => {
-      // Release OCR resources when leaving the page.
-      console.log("[Scan] Cleaning up OCR worker");
-      void terminateOcrWorker();
-    };
+  const canvasToBase64 = useCallback((canvas: HTMLCanvasElement): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error("Failed to capture image from camera."));
+            return;
+          }
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result;
+            const base64 = typeof result === "string" ? result.split(",")[1] ?? "" : "";
+            if (!base64) {
+              reject(new Error("Failed to convert image to base64."));
+            } else {
+              resolve(base64);
+            }
+          };
+          reader.onerror = () => reject(new Error("Failed to read captured image."));
+          reader.readAsDataURL(blob);
+        },
+        "image/png",
+        0.95,
+      );
+    });
   }, []);
 
   const handleScan = useCallback(
     async (canvas: HTMLCanvasElement) => {
-      console.log("[Scan] Scan requested");
+      console.log("[Scan] Scan requested (Gemini Vision)");
       setScanError(null);
+      setExplanationText(null);
+      setIsLoading(true);
 
       try {
-        console.log("[Scan] Starting OCR on captured frame");
-        const { codeText } = await recognizeCodeFromCanvas(canvas);
-        console.log("[Scan] OCR raw code text:", codeText);
-
-        if (!codeText) {
-          console.warn("[Scan] OCR returned empty / non-code text");
-          setScanError("Code snippet detected, but unable to extract clearly. Try again.");
-          setFlowState("cameraActive");
-          setExplanationPoints([]);
-          return;
-        }
-
-        setFlowState("codeDetected");
-        console.log("[Scan] Generating explanation for detected code");
-        const explanation = explainCode(codeText);
+        console.log("[Scan] Converting captured frame to base64");
+        const base64 = await canvasToBase64(canvas);
+        console.log("[Scan] Calling Gemini Vision");
+        const explanation = await explainCodeFromImage(base64);
         setFlowState("explanationReady");
-        const flowPoints =
-          explanation.logicFlow?.map((step) => step.explanation).filter(Boolean) ?? [];
-        const detailPoints = explanation.details ?? [];
-        const pointsSource = flowPoints.length > 0 ? flowPoints : detailPoints;
-        setExplanationPoints(pointsSource.slice(0, 4));
-        console.log("[Scan] Explanation points ready:", pointsSource.slice(0, 4));
+        setExplanationText(explanation);
+        console.log("[Scan] Explanation text ready");
       } catch (err) {
-        console.error("[Scan] OCR scan failed", err);
-        setScanError("Scanning failed. Please try again.");
+        console.error("[Scan] Gemini Vision scan failed", err);
+        const message =
+          err instanceof Error ? err.message : "Scanning failed. Please try again.";
+        setScanError(message);
         setFlowState("cameraActive");
-        setExplanationPoints([]);
+        setExplanationText(null);
+      } finally {
+        setIsLoading(false);
       }
     },
-    [],
+    [canvasToBase64],
   );
 
   return (
@@ -66,7 +76,7 @@ const ScanPage = () => {
       onCameraReady={() => setFlowState("cameraActive")}
       onScanStart={() => setFlowState("scanning")}
       onHelp={() => navigate("/")}
-      explanationPoints={explanationPoints}
+      explanationText={isLoading ? "Scanning code with Gemini..." : explanationText}
     />
   );
 };
