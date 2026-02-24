@@ -41,7 +41,7 @@ const HomePage = () => {
             Features
           </h3>
           {[
-            { icon: Camera, title: "Live Code Scan", desc: "Real-time OCR using your camera" },
+            { icon: Camera, title: "Live Code Scan", desc: "Real-time scanning using your camera" },
             { icon: Sparkles, title: "AI Explanations", desc: "Instant, beginner-friendly breakdowns" },
             { icon: Code, title: "Logic Flow", desc: "Step-by-step code walkthroughs" },
           ].map((f) => (
