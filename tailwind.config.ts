@@ -57,6 +57,22 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        header: {
+          DEFAULT: "hsl(var(--header-bg))",
+          foreground: "hsl(var(--header-foreground))",
+        },
+        code: {
+          DEFAULT: "hsl(var(--code-bg))",
+          foreground: "hsl(var(--code-foreground))",
+        },
+        explanation: {
+          DEFAULT: "hsl(var(--explanation-card))",
+          foreground: "hsl(var(--explanation-card-foreground))",
+        },
+        step: {
+          DEFAULT: "hsl(var(--step-badge))",
+          foreground: "hsl(var(--step-badge-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
