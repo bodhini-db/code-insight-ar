@@ -95,6 +95,43 @@ export default function ExplanationScreen({ explanation, onScanAgain }) {
           </section>
         )}
 
+        {/* Error Section */}
+        {explanation.errors && explanation.errors.length > 0 && (
+          <section>
+            <h2 className="mb-4 text-lg font-bold text-red-600">Errors Found</h2>
+            <ul className="space-y-3">
+              {explanation.errors.map((error, index) => (
+                <li key={index} className="text-sm text-red-500">
+                  <p><strong>Error {index + 1}:</strong></p>
+                  <p><strong>Type:</strong> {error.type}</p>
+                  <p><strong>Location:</strong> {error.location}</p>
+                  <p><strong>Problem:</strong> {error.problem}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Corrected Code Section */}
+        {explanation.correctedCode && (
+          <section>
+            <h2 className="mb-4 text-lg font-bold text-green-600">Corrected Code</h2>
+            <pre className="whitespace-pre-wrap font-mono text-sm text-foreground bg-muted/30 p-4 rounded-md">
+              {explanation.correctedCode}
+            </pre>
+          </section>
+        )}
+
+        {/* Explanation Section */}
+        {explanation.explanation && (
+          <section>
+            <h2 className="mb-4 text-lg font-bold text-foreground">Explanation</h2>
+            <p className="text-base leading-relaxed text-muted-foreground">
+              {explanation.explanation}
+            </p>
+          </section>
+        )}
+
         {/* Scan Again */}
         <div className="pb-8 pt-4">
           <button
