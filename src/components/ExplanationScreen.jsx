@@ -76,10 +76,10 @@ export default function ExplanationScreen({ explanation, onScanAgain }) {
           <section>
             <h2 className="mb-4 text-lg font-bold text-foreground">Logic Flow</h2>
             <div className="space-y-5">
-              {explanation.logicFlow.map((step) => (
-                <div key={step.step} className="flex gap-4">
+              {explanation.logicFlow.map((step, index) => (
+                <div key={index} className="flex gap-4">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#00BFA5] text-sm font-bold text-white shadow-sm">
-                    {step.step}
+                    {index + 1}
                   </div>
                   <div className="flex-1 space-y-1.5 pt-1">
                     <div className="rounded-md bg-muted/40 px-2 py-1 font-mono text-xs text-foreground/90 inline-block border border-border/40">
@@ -108,4 +108,3 @@ export default function ExplanationScreen({ explanation, onScanAgain }) {
     </div>
   );
 }
-      
